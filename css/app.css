@@ -746,6 +746,15 @@ button { font: inherit; color: inherit; }
   :root { --slot: min(22vw, 66px); }
   .log { max-height: 2.5rem; }
 }
+/* 667px is an iPhone SE and an iPhone 8, which is far too common a screen to
+   clip the End turn button on — and it did, by 21px. The log drops to one line
+   here rather than disappearing: in a game about exchanges, "what just
+   happened" is worth more than the 7px it costs. Ordered after the rule above
+   because both match at this height and the later one has to win. */
+@media (max-height: 700px) {
+  :root { --slot: min(21vw, 62px); }
+  .log { max-height: 2.1rem; }
+}
 @media (max-height: 640px) {
   .log { display: none; }
   :root { --slot: min(21vw, 62px); }
