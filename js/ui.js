@@ -90,7 +90,7 @@ window.UI = (function () {
   function kindIcon(card) {
     if (card.kind === 'unit') return ic(card.at);
     if (card.kind === 'weapon') return ic('clash');
-    return ic('swap-bag');
+    return ic('bag');
   }
 
   // ── A card in hand ───────────────────────────────────────────────────────
@@ -210,8 +210,8 @@ window.UI = (function () {
         '<span class="who-name">' + esc(p.name) + '</span>' +
         '<span class="who-deck"> · ' + esc(p.deckName) + '</span>' +
       '</span></span>' +
-      '<span class="tally">' + ic('swap-bag') + p.hand.length + '</span>' +
-      '<span class="tally">' + ic('scroll-unfurled') + p.deck.length + '</span>';
+      '<span class="tally">' + ic('hand') + p.hand.length + '</span>' +
+      '<span class="tally">' + ic('deck') + p.deck.length + '</span>';
   }
 
   function paintRibbon(host, state, view) {
@@ -321,7 +321,7 @@ window.UI = (function () {
 
   return {
     esc: esc, ic: ic, fxText: fxText, shortNote: shortNote,
-    cardFace: cardFace, slotFace: slotFace,
+    cardFace: cardFace, slotFace: slotFace, STAT_ICON: STAT_ICON,
     paintArmies: paintArmies, paintRibbon: paintRibbon,
     paintHand: paintHand, paintLog: paintLog,
     whoHtml: whoHtml, pips: pips, cardSheet: cardSheet,

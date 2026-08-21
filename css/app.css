@@ -57,10 +57,10 @@
   --slot: min(25vw, 82px);
   --gap:  clamp(4px, 1.2vw, 8px);
 
-  /* ── kidsuite wiring ──
-     The shared kit owns the skeleton and this app owns the paint, so these are
-     the only lines that decide what the front door and the grown-up panel look
-     like. */
+  /* ── kidsuite wiring, part one ──
+     The front door's tokens work from :root exactly as intended: landing.css
+     reads them as var(--ld-x, fallback) at the point of use, so it never
+     declares them itself and never competes. */
   --ld-ink:     var(--ink);
   --ld-lede:    var(--muted);
   --ld-cap:     var(--muted);
@@ -68,7 +68,29 @@
   --ld-go-bg:   var(--accent);
   --ld-go-deep: var(--accent-d);
   --ld-go-ink:  #fff;
+}
 
+
+/* ── kidsuite wiring, part two: the grown-up panel ──
+ *
+ * The doubled selector is deliberate and load-bearing. kidsuite's README is
+ * explicit that "shared files must not put defaults in :root", because these
+ * stylesheets load AFTER the app's own and a :root block there silently beats
+ * the app's — and it names the bug it caused: "Tidy Up's green button came out
+ * teal". landing.css follows that rule and declares nothing.
+ *
+ * grownup.css does not follow it. It ships a full :root palette, so every
+ * --gu- value set at :root here lost the tie on source order and the panel
+ * came out in Letter Sounds' green rather than this game's slate — the same
+ * bug the README warns about, from the other direction.
+ *
+ * :root:root is specificity 0,2,0 against grownup.css's 0,1,0, so it wins
+ * regardless of order. It is the same trick the README prescribes for app
+ * overrides of kit rules ("double the class"), applied to the tokens. Nothing
+ * in suite/ is edited, so the vendored copy stays byte-identical to canonical
+ * and tools/check stays quiet.
+ */
+:root:root {
   --gu-font:      var(--sans);
   --gu-mono:      var(--mono);
   --gu-ink:       var(--ink);
@@ -99,6 +121,14 @@
 /* ── Base ─────────────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; }
+
+/* The `hidden` attribute has to actually hide.
+   The browser's own rule for it is [hidden] { display: none }, which is a plain
+   element-level default — so any class here that sets `display` outranks it and
+   the element stays on screen with .hidden = true. That is exactly what
+   happened: the play controls carry `display: flex`, so the replay screen
+   showed its End turn button and its scrub bar at the same time. */
+[hidden] { display: none !important; }
 
 html, body {
   margin: 0;
@@ -231,6 +261,9 @@ button { font: inherit; color: inherit; }
 
 .btn-main, .btn-quiet {
   display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+  /* "End turn" wrapped to two lines and doubled the bar's height on a 375px
+     screen. A control this small should never wrap. */
+  white-space: nowrap;
   min-height: 46px; padding: .6rem 1.3rem;
   border-radius: 999px; border: 1px solid transparent;
   font-weight: 600; cursor: pointer;
@@ -272,9 +305,9 @@ button { font: inherit; color: inherit; }
 .who--mine .who-name { color: var(--mine); }
 .who--theirs .who-name { color: var(--theirs); }
 
-.pips { display: flex; align-items: center; gap: .28rem; }
+.pips { display: flex; align-items: center; gap: .18rem; }
 .pip {
-  width: 9px; height: 9px; border-radius: 50%;
+  width: 8px; height: 8px; border-radius: 50%;
   background: var(--line-2);
 }
 .pip.is-on { background: var(--accent); }
@@ -515,11 +548,11 @@ button { font: inherit; color: inherit; }
   padding-bottom: calc(.4rem + env(safe-area-inset-bottom));
   gap: .5rem;
 }
-.board-bottom .btn-main, .board-bottom .btn-quiet { min-height: 40px; padding: .4rem 1rem; }
+.board-bottom .btn-main, .board-bottom .btn-quiet { min-height: 40px; padding: .4rem .85rem; }
 
-.energy { display: flex; align-items: center; gap: .35rem; }
-.energy-label { font-size: .78rem; color: var(--muted); text-transform: uppercase;
-                letter-spacing: .06em; }
+.energy { display: flex; align-items: center; gap: .3rem; min-width: 0; }
+.energy-label { font-size: .68rem; color: var(--muted); text-transform: uppercase;
+                letter-spacing: .05em; white-space: nowrap; }
 
 /* ── Prompt line: what the game wants you to do next ─────────────────── */
 
@@ -667,6 +700,40 @@ button { font: inherit; color: inherit; }
   text-align: center;
   word-break: break-all;
   margin: .6rem 0;
+}
+
+/* ── Roomier screens ──────────────────────────────────────────────────────
+   The board is sized for a phone first, and on a monitor that left it as a
+   small island in the middle of a lot of empty width. Given both the width and
+   the height to spend, the slots grow and every strip is centred on the same
+   column so the board, the log and the hand line up as one object. */
+
+/* Stepped by HEIGHT, because height is what actually binds: four rows of slots
+   at a 3:4 ratio eat 5.3x the slot width in vertical space, so a wide-but-short
+   window has no room to grow into. Sizing off width alone pushed the board
+   158px past the bottom of a 1280x860 window. */
+@media (min-width: 700px) and (min-height: 900px) {
+  :root { --slot: min(12vw, 100px); --gap: 9px; }
+}
+@media (min-width: 700px) and (min-height: 1040px) {
+  :root { --slot: min(12vw, 122px); --gap: 10px; }
+}
+
+@media (min-width: 700px) {
+  #screen-game > .board-top,
+  #screen-game > .ribbon,
+  #screen-game > .prompt,
+  #screen-game > .log,
+  #screen-game > .hand-strip,
+  #screen-game > .board-bottom,
+  #screen-game > .scrub-bar {
+    width: min(100%, 780px);
+    margin-inline: auto;
+  }
+  /* These two carry their own top border, which should stop with the column
+     rather than run the full width of a wide window. */
+  #screen-game > .board-bottom,
+  #screen-game > .scrub-bar { border-radius: var(--r) var(--r) 0 0; }
 }
 
 /* ── Small screens ────────────────────────────────────────────────────── */

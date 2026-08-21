@@ -12,6 +12,7 @@ const ICONS = {
   'def':'lorc/checked-shield','res':'lorc/spiral-shell','spd':'lorc/walking-boot',
   // ui
   'crown':'lorc/crown','hourglass':'lorc/hourglass','clash':'lorc/crossed-swords','wing':'lorc/feathered-wing',
+  'hand':'lorc/poker-hand','deck':'delapouite/stack','bag':'lorc/swap-bag',
   // class portraits
   'vanguard':'lorc/visored-helm','duelist':'lorc/dodging','reaver':'lorc/axe-swing',
   'hewer':'lorc/lamellar','lancer':'lorc/horse-head','pikeguard':'lorc/trident',

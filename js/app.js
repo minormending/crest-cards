@@ -159,10 +159,10 @@ window.App = (function () {
       tile('host', 'crown', 'Play a friend',
            rooms ? 'Open a room and pass on the code.'
                  : 'Needs sharing switched on — see the grown-up panel.', !rooms) +
-      tile('join', 'swap-bag', 'Join with a code',
+      tile('join', 'hand', 'Join with a code',
            rooms ? 'Battle, or watch if both seats are taken.'
                  : 'Needs sharing switched on.', !rooms) +
-      tile('games', 'scroll-unfurled', 'Replays',
+      tile('games', 'deck', 'Replays',
            count ? count + (count === 1 ? ' saved match' : ' saved matches') +
                    ' — step through any of them move by move.'
                  : 'Finished matches are kept here, and can be replayed.', !count);
@@ -415,7 +415,7 @@ window.App = (function () {
     el['board-bottom'].innerHTML =
       '<span class="energy"><span class="energy-label">Energy</span>' +
       UI.pips(energy, C.RULES.ENERGY_MAX) + '</span>' +
-      '<span class="tally">' + UI.ic('scroll-unfurled') + p.deck.length + '</span>' +
+      '<span class="tally">' + UI.ic('deck') + p.deck.length + '</span>' +
       '<span style="flex:1"></span>' +
       (watching()
         ? '<button class="btn-quiet" data-act="quit">Leave</button>'

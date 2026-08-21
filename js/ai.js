@@ -26,7 +26,7 @@ window.AI = (function () {
 
   var LEVELS = {
     gentle: {
-      label: 'Gentle', badge: 'hp',
+      label: 'Gentle', badge: 'salve',
       note: 'Plays honestly, misses chances, and will let a mistake go.',
       depth: 1, topK: 3, slack: 30, aggression: 0.65, threshold: 6,
     },

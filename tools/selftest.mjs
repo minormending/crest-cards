@@ -5,7 +5,7 @@
  * the same list land on the same board. These checks exist to catch the day
  * that stops being true. */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 
 // The game ships as classic scripts against `window`; give them one.
 const win = {};
@@ -13,10 +13,10 @@ globalThis.window = win;
 globalThis.addEventListener = () => {};
 win.addEventListener = () => {};
 for (const f of ['js/rng.js', 'js/cards.js', 'js/engine.js', 'js/ai.js',
-                 'js/crest.js', 'js/sync-host.js']) {
+                 'js/crest.js', 'js/sync-host.js', 'js/ui.js']) {
   new Function(readFileSync(f, 'utf8'))();
 }
-const { Rng, Cards, Engine, AI, Crest, Sync } = win;
+const { Rng, Cards, Engine, AI, Crest, Sync, UI } = win;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -304,6 +304,50 @@ function clearField(st, side) {
   // of repeats is expected arithmetic, not a bug — the class icon still differs.
   ok('crests are nearly all distinct', seen.size >= refs.length - 3,
      `${seen.size} designs for ${refs.length} cards`);
+}
+
+// ── 12. Every icon reference resolves to a file ──────────────────────────
+//
+// This one exists because it happened: the interface asked for ic('swap-bag')
+// and ic('scroll-unfurled') — the UPSTREAM names in the game-icons repo — while
+// the files had been saved under this project's own names. A CSS mask pointing
+// at a 404 fails silently and invisibly: no console error, no broken-image
+// glyph, just a 15px hole where an icon should be, which survived several
+// screenshots before anyone noticed the numbers had nothing beside them.
+{
+  const files = new Set(
+    readdirSync('art/icons').filter(f => f.endsWith('.svg')).map(f => f.slice(0, -4))
+  );
+
+  // References written by hand in the interface code...
+  const inCode = new Set();
+  for (const f of ['js/ui.js', 'js/app.js']) {
+    const src = readFileSync(f, 'utf8');
+    for (const m of src.matchAll(/\bic\('([a-z0-9-]+)'/g)) inCode.add(m[1]);
+  }
+  // ...plus the ones reached through a lookup rather than a literal. Read from
+  // the live map instead of grepped for, because a regex cannot see through
+  // ic(STAT_ICON[x]) — and the orphan check below was wrong about four icons
+  // until it did this.
+  Object.keys(UI.STAT_ICON).forEach(k => inCode.add(UI.STAT_ICON[k]));
+  const badCode = [...inCode].filter(n => !files.has(n));
+  ok('every ic() reference has a file', badCode.length === 0, badCode.join(', '));
+
+  // References that come from the card data.
+  const fromData = new Set([
+    ...Cards.UNITS.map(c => c.art),
+    ...Cards.WEAPONS.map(c => c.art),
+    ...Cards.ITEMS.map(c => c.art),
+    ...Cards.DECKS.map(d => d.badge).filter(Boolean),
+    ...Object.keys(AI.LEVELS).map(k => AI.LEVELS[k].badge).filter(Boolean),
+  ]);
+  const badData = [...fromData].filter(n => !files.has(n));
+  ok('every card and deck art reference has a file', badData.length === 0, badData.join(', '));
+
+  // And the reverse: a downloaded icon nothing uses is dead weight to ship.
+  const referenced = new Set([...inCode, ...fromData]);
+  const orphans = [...files].filter(n => !referenced.has(n));
+  ok('no unreferenced icons are shipped', orphans.length === 0, orphans.join(', '));
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

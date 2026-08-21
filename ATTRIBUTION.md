@@ -16,7 +16,7 @@ the roster reads the way it does.
 
 ## Icons — game-icons.net
 
-2 artists, 39 icons, from the
+2 artists, 42 icons, from the
 [game-icons.net](https://game-icons.net) collection
 ([source repository](https://github.com/game-icons/icons)).
 
@@ -24,8 +24,8 @@ Licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
 **This licence requires the credit below to be kept**, which is why this file
 ships with the game rather than living in a commit message.
 
-- **Lorc** (https://lorcblog.blogspot.com) — 37 icons
-- **Delapouite** (https://delapouite.com) — 2 icons
+- **Lorc** (https://lorcblog.blogspot.com) — 39 icons
+- **Delapouite** (https://delapouite.com) — 3 icons
 
 Each file was modified for this project in two ways, by `tools/fetch-icons.mjs`:
 the full-bleed black backing rectangle was deleted, and the white glyph fill was
@@ -35,6 +35,7 @@ CC BY 3.0 permits modification; this paragraph is the required notice of it.
 | file | upstream icon | artist |
 | --- | --- | --- |
 | `art/icons/axe.svg` | battle-axe | Lorc |
+| `art/icons/bag.svg` | swap-bag | Lorc |
 | `art/icons/bannerguard.svg` | knight-banner | Delapouite |
 | `art/icons/bolt.svg` | lightning-trio | Lorc |
 | `art/icons/bow.svg` | high-shot | Lorc |
@@ -42,6 +43,7 @@ CC BY 3.0 permits modification; this paragraph is the required notice of it.
 | `art/icons/clash.svg` | crossed-swords | Lorc |
 | `art/icons/cloak.svg` | wing-cloak | Lorc |
 | `art/icons/crown.svg` | crown | Lorc |
+| `art/icons/deck.svg` | stack | Delapouite |
 | `art/icons/def.svg` | checked-shield | Lorc |
 | `art/icons/drakerider.svg` | wyvern | Lorc |
 | `art/icons/duelist.svg` | dodging | Lorc |
@@ -52,6 +54,7 @@ CC BY 3.0 permits modification; this paragraph is the required notice of it.
 | `art/icons/frostbinder.svg` | frostfire | Lorc |
 | `art/icons/gale.svg` | whirlwind | Lorc |
 | `art/icons/galecaller.svg` | tornado | Lorc |
+| `art/icons/hand.svg` | poker-hand | Lorc |
 | `art/icons/hewer.svg` | lamellar | Lorc |
 | `art/icons/hourglass.svg` | hourglass | Lorc |
 | `art/icons/hp.svg` | heart-inside | Lorc |
