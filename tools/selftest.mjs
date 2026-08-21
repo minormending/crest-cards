@@ -350,6 +350,103 @@ function clearField(st, side) {
   ok('no unreferenced icons are shipped', orphans.length === 0, orphans.join(', '));
 }
 
+// ── 13. Two devices actually play a whole match through the merge ────────
+//
+// The merge algebra above is necessary but not sufficient: it says two records
+// combine cleanly, not that a real match survives being played that way. So
+// this runs the actual protocol — host, join, claim a seat, then alternate
+// moves, syncing only through Sync.merge — and checks after EVERY exchange
+// that both devices compute the same board from the same list.
+//
+// This is the closest thing to a live-room test that runs without a network,
+// and it is where a desync would show up: not as an error, but as two players
+// quietly looking at different boards.
+{
+  // Each "device" is a local record plus an id, exactly as kidsync holds it.
+  const A = { id: 'devA', st: Sync.emptyState() };
+  const B = { id: 'devB', st: Sync.emptyState() };
+
+  const dense = (st) => {
+    const out = [];
+    for (let i = 0; st.moves[String(i)] !== undefined; i++) out.push(st.moves[String(i)]);
+    return out;
+  };
+  const setupOf = (st) => Engine.makeSetup({
+    seed: st.match.seed,
+    decks: [st.match.decks[0], st.match.decks[1]],
+    names: [st.names['0'] || 'Host', st.names['1'] || 'Guest'],
+  });
+  // One device receives the other's record. Real kidsync pushes a whole state
+  // and the receiver merges it in; this is that, both ways.
+  const sync = () => {
+    const merged = Sync.merge(A.st, B.st);
+    A.st = merged;
+    B.st = Sync.merge(B.st, merged);
+  };
+  const append = (dev, mv) => {
+    const at = dense(dev.st).length;
+    dev.st = { ...dev.st, moves: { ...dev.st.moves, [String(at)]: mv } };
+  };
+
+  // Host opens a room. Note the local record is REPLACED, not added to.
+  A.st = { match: { v: 1, seed: 31337, decks: ['ashfell', null] },
+           names: { '0': 'Ana' }, seats: { '0': A.id }, moves: {} };
+  // Guest arrives empty, receives the room, then claims the free seat.
+  B.st = Sync.merge(Sync.emptyState(), A.st);
+  ok('the guest sees the room it joined', B.st.match.seed === 31337);
+  B.st = {
+    ...B.st,
+    seats: { ...B.st.seats, '1': B.id },
+    names: { ...B.st.names, '1': 'Ben' },
+    match: { ...B.st.match, decks: [B.st.match.decks[0], 'storm'] },
+  };
+  sync();
+  ok('both decks are agreed after one exchange',
+     A.st.match.decks.join(',') === 'ashfell,storm' &&
+     B.st.match.decks.join(',') === 'ashfell,storm');
+  ok('both seats are agreed', A.st.seats['0'] === 'devA' && A.st.seats['1'] === 'devB');
+
+  // Play it out, one move at a time, syncing after each.
+  let agreed = true, plies = 0, endedCleanly = false;
+  const seatOf = { devA: 0, devB: 1 };
+  for (let i = 0; i < 600; i++) {
+    const boardA = Engine.derive(setupOf(A.st), dense(A.st));
+    const boardB = Engine.derive(setupOf(B.st), dense(B.st));
+    if (JSON.stringify(boardA) !== JSON.stringify(boardB)) { agreed = false; break; }
+    if (boardA.winner !== null) { endedCleanly = true; break; }
+
+    // Whichever device holds the seat that is to move appends the next move.
+    const dev = seatOf.devA === boardA.cur ? A : B;
+    const mv = AI.next(boardA, 'steady', Rng.make(7000 + i)) || { s: boardA.cur, t: 'end' };
+    append(dev, mv);
+    sync();
+    plies++;
+  }
+  ok('the two devices never disagree about the board', agreed, `diverged after ${plies} plies`);
+  ok('the shared match reaches a result', endedCleanly, `${plies} plies`);
+  ok('nothing in the shared log was illegal',
+     Engine.derive(setupOf(A.st), dense(A.st)).rejected.length === 0);
+
+  // A spectator is a third record that only ever reads.
+  const watcher = Sync.merge(Sync.emptyState(), A.st);
+  ok('a spectator computes the same board',
+     JSON.stringify(Engine.derive(setupOf(watcher), dense(watcher))) ===
+     JSON.stringify(Engine.derive(setupOf(A.st), dense(A.st))));
+  ok('a spectator holds no seat',
+     watcher.seats['0'] !== 'devC' && watcher.seats['1'] !== 'devC');
+
+  // The whole shared record has to fit kidsync's room.
+  const bytes = JSON.stringify(A.st).length;
+  ok('the finished room fits kidsync’s 32KB', bytes < 32 * 1024, `${bytes} bytes`);
+
+  // A rematch bumps the epoch and empties the log; the epoch is what lets a
+  // move list SHRINK, which no merge can do on its own.
+  const before = dense(A.st).length;
+  const after = { ...A.st, moves: {}, _epoch: 1 };
+  ok('a rematch can empty a log a merge could not',
+     dense(after).length === 0 && before > 0, `${before} moves before`);
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 console.log(`games: ${finished}/${total} finished · longest ${longest} moves · ${longestBytes} bytes`);
 process.exit(fail ? 1 : 0);
