@@ -180,21 +180,25 @@ and you get the board, live, with nothing to append.
 it can read and write that room. Fine for a card game; do not put anything
 personal in a display name.
 
-### Turning rooms on
+### Where rooms point
 
-Rooms are the one thing that needs setup, and the game is fully playable
-without them — solo, and every replay, work offline and forever.
+[`sync/firebase-config.js`](sync/firebase-config.js) holds the config for the
+`kids-games-sync` project, which the other games in this suite already use.
+Sharing one project is deliberate, not thrift: kidsync namespaces every room by
+the `game` name in [`js/sync-host.js`](js/sync-host.js), so a code here can
+never collide with a code in another game.
 
-[`sync/firebase-config.js`](sync/firebase-config.js) ships as the canonical
-placeholder template. Paste in a Firebase config and rooms light up; the file
-says exactly what and where. Rooms are namespaced by game name, so one Firebase
-project serves any number of games without collisions.
+To point a copy of this game somewhere else, replace that one file. Nothing else
+in the repo knows which project it talks to, and the game stays fully playable
+against the standalone opponent with it broken, missing or full of placeholders
+— only the shared half switches off.
 
 Those config values are **public by design** — Firebase expects them in client
 code and committing them is correct. They are an address, not a secret; the
-protection is [`sync/firebase-rules.json`](sync/firebase-rules.json). The
-project also needs Realtime Database (not Firestore) and Anonymous sign-in.
-kidsync's README covers all of it.
+protection is [`sync/firebase-rules.json`](sync/firebase-rules.json), whose
+rules are game-agnostic (`rooms/$roomId`, minimum length 16) and so already
+cover this game's paths. The project needs Realtime Database (not Firestore) and
+Anonymous sign-in enabled. kidsync's README covers all of it.
 
 ---
 
