@@ -738,13 +738,17 @@ button { font: inherit; color: inherit; }
 
 /* ── Small screens ────────────────────────────────────────────────────── */
 
+/* Four rows at 3:4 cost 5.3x the slot width in height, so these steps are
+   sized from a measured budget rather than picked: at 72px a 1280x720 laptop
+   window — an extremely ordinary one — still overflowed by 27px and clipped the
+   controls off the bottom. */
 @media (max-height: 740px) {
-  :root { --slot: min(23vw, 72px); }
+  :root { --slot: min(22vw, 66px); }
   .log { max-height: 2.5rem; }
 }
 @media (max-height: 640px) {
   .log { display: none; }
-  :root { --slot: min(22vw, 66px); }
+  :root { --slot: min(21vw, 62px); }
 }
 
 /* ── Reduced motion ───────────────────────────────────────────────────── */
