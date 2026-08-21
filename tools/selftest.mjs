@@ -128,6 +128,122 @@ ok('bow sits outside', Cards.triangle('bow', 'sword') === 0 && Cards.triangle('s
      Engine.canReach(p, foe, { r: 1, c: 1 }, { r: 0, c: 0 }));
 }
 
+// ── 9. Tactics the player will actually notice ───────────────────────────
+//
+// Win rate against a random player turned out to be a poor way to judge this:
+// a weight sweep moved it by ~1%, which is inside the noise, because most turns
+// in this game have one obvious play that both a bot and a coin will find. What
+// a person notices instead is whether the opponent misses a kill, throws a unit
+// away, or stands its archers in the front rank. So those are checked directly.
+
+function board(decks, hands) {
+  const setup = Engine.makeSetup({ seed: 555, decks, names: ['A', 'B'] });
+  const st = Engine.start(setup);
+  st.turn = 4;                       // past the opening-turn attack ban
+  st.cur = 0;
+  st.players[0].energy = 8;
+  if (hands) { st.players[0].hand = hands[0]; st.players[1].hand = hands[1]; }
+  return st;
+}
+
+/** Drop a unit onto the board directly, at a chosen health. */
+function place(st, side, r, c, ref, hp) {
+  const inst = Engine.derive(st.setup, []);       // borrow a clean instantiation
+  const p = st.players[side];
+  const proto = Engine.start(st.setup).players[side].field[1][1];
+  const card = Cards.get(ref);
+  p.field[r][c] = {
+    u: {
+      ref, name: card.name, cls: card.cls, at: card.at, art: card.art,
+      st: { ...card.st }, hp: hp == null ? card.st.hp : hp, maxHp: card.st.hp,
+      tags: card.tags.slice(), fx: JSON.parse(JSON.stringify(card.fx)),
+      sovereign: !!card.sovereign,
+    },
+    w: null, acted: false,
+  };
+  return p.field[r][c];
+}
+
+function clearField(st, side) {
+  st.players[side].field = [[null, null, null], [null, null, null]];
+}
+
+// 9a. A lethal blow on the Sovereign is never passed up.
+//
+// Note the attacker and target: the first version of this test used a Reaver
+// against the armoured Sovereign, whose DEF 10 reduces it to 1 damage a hit —
+// so declining was CORRECT play and the test was wrong. A Hewer against the
+// lightly-armoured Sovereign actually threatens lethal.
+{
+  const st = board(['ashfell', 'storm'], [[], []]);
+  clearField(st, 0); clearField(st, 1);
+  place(st, 0, 0, 0, 'u:hewer');               // STR 10, ours, front, can reach
+  place(st, 1, 1, 1, 'u:sov-storm', 3);        // DEF 5 — 5 damage gets there
+  const mv = AI.next(st, 'steady', Rng.make(1));
+  ok('takes the lethal blow on the Sovereign',
+     mv && mv.t === 'atk' && mv.tr === 1 && mv.tc === 1, JSON.stringify(mv));
+}
+
+// 9b. A unit is not thrown away for one point of damage.
+{
+  const st = board(['ashfell', 'ivory'], [[], []]);
+  clearField(st, 0); clearField(st, 1);
+  place(st, 0, 0, 0, 'u:shade', 3);            // 3 HP, will die to the answer
+  place(st, 0, 1, 1, 'u:sov-ash');             // so the side is not routed
+  place(st, 1, 0, 0, 'u:hewer');               // 26 HP, DEF 7, STR 10
+  place(st, 1, 1, 1, 'u:sov-ivory');
+  const mv = AI.next(st, 'steady', Rng.make(1));
+  const suicide = mv && mv.t === 'atk' && mv.fr === 0 && mv.fc === 0;
+  ok('refuses to trade a unit for 1 damage', !suicide, JSON.stringify(mv));
+}
+
+// 9c. A kill is preferred over chipping something bigger.
+{
+  const st = board(['ashfell', 'ivory'], [[], []]);
+  clearField(st, 0); clearField(st, 1);
+  place(st, 0, 0, 1, 'u:hewer');               // STR 10
+  place(st, 0, 1, 1, 'u:sov-ash');
+  place(st, 1, 0, 0, 'u:shade', 4);            // killable outright
+  place(st, 1, 0, 2, 'u:warden');              // 24 HP, only chippable
+  place(st, 1, 1, 1, 'u:sov-ivory');
+  const mv = AI.next(st, 'steady', Rng.make(1));
+  ok('takes the kill over the chip',
+     mv && mv.t === 'atk' && mv.tr === 0 && mv.tc === 0, JSON.stringify(mv));
+}
+
+// 9d. Melee holds the front; archers go behind it.
+{
+  const st = board(['ashfell', 'storm'], [['u:vanguard', 'u:marksman'], []]);
+  clearField(st, 0); clearField(st, 1);
+  place(st, 0, 1, 1, 'u:sov-ash');
+  place(st, 1, 0, 0, 'u:warden');
+  place(st, 1, 1, 1, 'u:sov-ivory');
+  st.players[0].energy = 8;
+  // Let it make its deployments, then look at where things ended up.
+  for (let i = 0; i < 4; i++) {
+    const mv = AI.next(st, 'steady', Rng.make(i + 1));
+    if (!mv || mv.t === 'end') break;
+    if (!Engine.applyMove(st, mv).ok) break;
+  }
+  const where = (cls) => {
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
+      const s = st.players[0].field[r][c];
+      if (s && s.u.cls === cls) return r;
+    }
+    return -1;
+  };
+  ok('the Vanguard took the front rank', where('Vanguard') === Engine.FRONT, `row ${where('Vanguard')}`);
+  ok('the Marksman stayed behind it', where('Marksman') === Engine.BACK, `row ${where('Marksman')}`);
+}
+
+// 9e. Every level closes out its turn rather than stalling.
+['gentle', 'steady', 'keen'].forEach((lv) => {
+  const st = board(['ashfell', 'ivory'], null);
+  const moves = AI.turn(st, lv, Rng.make(3));
+  ok(`${lv} ends its turn`, moves.length > 0 && moves[moves.length - 1].t === 'end',
+     JSON.stringify(moves.slice(-1)));
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 console.log(`games: ${finished}/${total} finished · longest ${longest} moves · ${longestBytes} bytes`);
 process.exit(fail ? 1 : 0);
