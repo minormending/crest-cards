@@ -10,12 +10,13 @@ import { readFileSync } from 'node:fs';
 // The game ships as classic scripts against `window`; give them one.
 const win = {};
 globalThis.window = win;
-for (const f of ['js/rng.js', 'js/cards.js', 'js/engine.js', 'js/ai.js']) {
-  try { new Function(readFileSync(f, 'utf8'))(); } catch (e) {
-    if (!f.includes('ai.js')) throw new Error(`loading ${f}: ${e.message}`);
-  }
+globalThis.addEventListener = () => {};
+win.addEventListener = () => {};
+for (const f of ['js/rng.js', 'js/cards.js', 'js/engine.js', 'js/ai.js',
+                 'js/crest.js', 'js/sync-host.js']) {
+  new Function(readFileSync(f, 'utf8'))();
 }
-const { Rng, Cards, Engine, AI } = win;
+const { Rng, Cards, Engine, AI, Crest, Sync } = win;
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra = '') => {
@@ -243,6 +244,67 @@ function clearField(st, side) {
   ok(`${lv} ends its turn`, moves.length > 0 && moves[moves.length - 1].t === 'end',
      JSON.stringify(moves.slice(-1)));
 });
+
+// ── 10. The sync merge, which has to satisfy kidsync's one hard rule ─────
+//
+// kidsync's README is emphatic that a merge must SETTLE: merging the same two
+// states twice has to give what merging them once gave, or two devices push
+// each other's results back and forth forever. A move list makes that easy —
+// union by move number — but the tie-breaks around it are where it could be
+// lost, so the algebra is checked rather than assumed.
+{
+  const j = (x) => JSON.stringify(x);
+  const A = {
+    match: { v: 1, seed: 5, decks: ['ashfell', null] },
+    names: { '0': 'Kev' }, seats: { '0': 'devA' }, moves: { '0': { s: 0, t: 'end' } },
+  };
+  const B = {
+    match: { v: 1, seed: 5, decks: [null, 'storm'] },
+    names: { '1': 'Sam' }, seats: { '1': 'devB' }, moves: { '1': { s: 1, t: 'end' } },
+  };
+  const m = Sync.merge(A, B);
+
+  ok('both seats’ deck choices survive the merge',
+     m.match.decks[0] === 'ashfell' && m.match.decks[1] === 'storm', j(m.match.decks));
+  ok('seats union', m.seats['0'] === 'devA' && m.seats['1'] === 'devB');
+  ok('moves union by number', Object.keys(m.moves).length === 2);
+  ok('merge is commutative', j(Sync.merge(A, B)) === j(Sync.merge(B, A)));
+  ok('merge is idempotent', j(Sync.merge(A, Sync.merge(A, B))) === j(Sync.merge(A, B)));
+  ok('merge settles on one pass', j(Sync.merge(m, m)) === j(m));
+
+  // Two devices writing different moves at the same index must agree on which
+  // one survives, or they diverge permanently.
+  const C1 = { match: null, names: {}, seats: {}, moves: { '0': { s: 0, t: 'end' } } };
+  const C2 = { match: null, names: {}, seats: {}, moves: { '0': { s: 0, t: 'res' } } };
+  ok('a same-index clash resolves identically on both devices',
+     j(Sync.merge(C1, C2)) === j(Sync.merge(C2, C1)));
+
+  // An empty local record joining a room must adopt the room wholesale, or a
+  // leftover match from a previous room would union into the new one.
+  const room = { match: { v: 1, seed: 9, decks: ['ivory', 'storm'] },
+                 names: { '0': 'H' }, seats: { '0': 'devH' }, moves: { '0': { s: 0, t: 'end' } } };
+  const joined = Sync.merge(Sync.emptyState(), room);
+  ok('an emptied device adopts the room it joins', j(joined) === j(room), j(joined));
+}
+
+// ── 11. Crests are stable and mostly distinct ────────────────────────────
+{
+  const refs = [
+    ...Cards.UNITS.map(c => 'u:' + c.id),
+    ...Cards.WEAPONS.map(c => 'w:' + c.id),
+    ...Cards.ITEMS.map(c => 'i:' + c.id),
+  ];
+  ok('a crest is the same every time',
+     Crest.hash('u:vanguard') === Crest.hash('u:vanguard'));
+  const seen = new Set(refs.map(r => {
+    const d = Crest.describe(r);
+    return [d.tincture.name, d.division, d.bordered, d.flipped].join('/');
+  }));
+  // 8 tinctures x 6 divisions x 2 x 2 = 192 designs for 39 cards, so a couple
+  // of repeats is expected arithmetic, not a bug — the class icon still differs.
+  ok('crests are nearly all distinct', seen.size >= refs.length - 3,
+     `${seen.size} designs for ${refs.length} cards`);
+}
 
 console.log(`\n${pass} passed, ${fail} failed`);
 console.log(`games: ${finished}/${total} finished · longest ${longest} moves · ${longestBytes} bytes`);

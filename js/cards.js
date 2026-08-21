@@ -22,7 +22,11 @@ window.Cards = (function () {
     DECK_SIZE: 15,       // per deck, excluding the Sovereign
     HAND_START: 4,       // cards dealt before the first turn
     DRAW_PER_TURN: 1,
-    ENERGY_START: 1,     // turn 1 allowance; +1 per own turn thereafter
+    /* Turn-1 allowance, +1 per own turn after. Two, not one: the cheapest unit
+       costs 2, so at 1 the opening turn had no play in it but "end turn" —
+       every card in hand greyed out. At 2 the first turn is a real decision,
+       namely whether to put a body in front of your Sovereign. */
+    ENERGY_START: 2,
     ENERGY_MAX: 8,
     TRIANGLE_BONUS: 2,   // attack bonus for holding triangle advantage
     MIN_DAMAGE: 1,       // an attack always does something
@@ -262,7 +266,7 @@ window.Cards = (function () {
 
   var DECKS = [
     {
-      id: 'ashfell', name: 'Ashfell Vanguard',
+      id: 'ashfell', name: 'Ashfell Vanguard', badge: 'sword',
       lede: 'Cheap, fast, and unkind about it. Wins early or not at all.',
       sovereign: 'u:sov-ash',
       list: expand([
@@ -273,7 +277,7 @@ window.Cards = (function () {
       ]),
     },
     {
-      id: 'ivory', name: 'Ivory Wardens',
+      id: 'ivory', name: 'Ivory Wardens', badge: 'def',
       lede: 'Slow, armoured, and content to be attacked. Wins the long one.',
       sovereign: 'u:sov-ivory',
       list: expand([
@@ -284,7 +288,7 @@ window.Cards = (function () {
       ]),
     },
     {
-      id: 'storm', name: 'Storm Choir',
+      id: 'storm', name: 'Storm Choir', badge: 'ember',
       lede: 'Hits the back row from the back row. Fragile if it is reached.',
       sovereign: 'u:sov-storm',
       list: expand([

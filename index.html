@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover so the board can reach under a notch; the safe-area
+     insets in css/app.css are what keep the controls clear of it. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f4f0">
+<meta name="color-scheme" content="light">
+<meta name="description" content="Crest Cards — a small tactical card game. Six positions, one commander, and a weapon triangle. Play a standalone opponent, or open a room and battle a friend.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Crest Cards">
+<title>Crest Cards</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+
+<!-- The app's own paint first, then the shared kit, which is what lets
+     .grownup and .landing settle ties with anything declared here.
+     See the load-order note in css/app.css. -->
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="suite/grownup.css">
+<link rel="stylesheet" href="suite/landing.css">
+</head>
+<body>
+
+<!-- The front door. kidsuite's Landing renders itself into this. -->
+<section id="screen-hello" class="screen"></section>
+
+<!-- Menu -->
+<section id="screen-menu" class="screen">
+  <div class="wrap">
+    <header class="menu-head">
+      <h1>Crest Cards</h1>
+      <div class="rule"></div>
+      <p>Six positions. One commander. Hold the front rank.</p>
+    </header>
+    <div class="menu-list" id="menu-list"></div>
+  </div>
+</section>
+
+<!-- Deck / difficulty / room setup, all painted by App -->
+<section id="screen-setup" class="screen">
+  <div class="wrap" id="setup-body"></div>
+</section>
+
+<!-- The board. One screen serves live play, spectating and replay: the only
+     thing that differs between them is where the move list comes from. -->
+<section id="screen-game" class="screen">
+  <div class="board-top" id="board-top"></div>
+  <div class="ribbon" id="ribbon"></div>
+  <div class="field-stack">
+    <div class="army army--theirs" id="army-theirs"></div>
+    <div class="midline"></div>
+    <div class="army army--mine" id="army-mine"></div>
+  </div>
+  <p class="prompt" id="prompt"></p>
+  <div class="log" id="log" aria-live="polite"></div>
+  <div class="hand-strip" id="hand"></div>
+  <div class="board-bottom" id="board-bottom"></div>
+  <div class="scrub-bar" id="scrub-bar" hidden></div>
+</section>
+
+<!-- Saved matches -->
+<section id="screen-games" class="screen">
+  <div class="wrap" id="games-body"></div>
+</section>
+
+<!-- The grown-up panel, behind the hold-to-open gate. `.grownup` is what
+     switches on kidsuite's card kit. -->
+<section id="screen-panel" class="screen grownup">
+  <div class="gu-sheet" id="panel-body"></div>
+</section>
+
+<!-- Card detail and the end-of-match sheet -->
+<div class="veil" id="veil" hidden>
+  <div class="sheet-card" id="veil-body" role="dialog" aria-modal="true"></div>
+</div>
+
+<!-- Game modules, in dependency order. Classic scripts against `window`, the
+     same convention the two vendored modules use, so there is no build step. -->
+<script src="js/rng.js"></script>
+<script src="js/cards.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/crest.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/archive.js"></script>
+<script src="js/sync-host.js"></script>
+
+<!-- The shared kit. suite/sync-card.js is vendored but deliberately not
+     loaded — see the note at the top of js/app.js. -->
+<script src="suite/landing.js"></script>
+<script src="suite/gate.js"></script>
+
+<script src="js/app.js"></script>
+
+<!-- Last, and a module: it dynamically imports kidsync, which pulls the
+     Firebase SDK from a CDN. A static import would take the whole page down
+     when that CDN is unreachable; this way a failure is one console line and a
+     game that plays exactly as it did before. -->
+<script type="module" src="sync/bridge.js"></script>
+
+</body>
+</html>

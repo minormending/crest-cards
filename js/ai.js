@@ -26,17 +26,17 @@ window.AI = (function () {
 
   var LEVELS = {
     gentle: {
-      label: 'Gentle',
+      label: 'Gentle', badge: 'hp',
       note: 'Plays honestly, misses chances, and will let a mistake go.',
       depth: 1, topK: 3, slack: 30, aggression: 0.65, threshold: 6,
     },
     steady: {
-      label: 'Steady',
+      label: 'Steady', badge: 'def',
       note: 'Takes the good trades and defends its Sovereign. A fair game.',
       depth: 1, topK: 2, slack: 12, aggression: 1.0, threshold: 0,
     },
     keen: {
-      label: 'Keen',
+      label: 'Keen', badge: 'clash',
       note: 'Reads your reply before it moves. Punishes a loose front row.',
       depth: 2, topK: 1, slack: 0, aggression: 1.15, threshold: -8,
     },

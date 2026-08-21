@@ -361,7 +361,7 @@ window.Engine = (function () {
 
       if (e.k === 'draw') {
         draw(state, side, e.n);
-        say(state, p.name + ' reads ' + card.name + ' and draws ' + e.n + '.');
+        say(state, card.name + ' read — ' + e.n + ' drawn.');
 
       } else if (e.k === 'heal') {
         var t = p.field[target.r][target.c];
@@ -511,12 +511,16 @@ window.Engine = (function () {
       // hand is indistinguishable from a card on the board, and the front row
       // stops being a commitment.
       p.field[mv.r][mv.c] = { u: instantiate(ref), w: null, acted: true };
-      say(state, p.name + ' deploys ' + card.name + '.');
+      /* The card is the subject, not the player. It reads better, it says the
+         more useful half, and it sidesteps conjugating a name the player chose
+         — "You deploys Bryn Halloway" was the version that made the point. Each
+         line is already tagged with its side and coloured accordingly. */
+      say(state, card.name + ' takes the field.');
 
       card.fx.forEach(function (e) {
         if (e.k === 'draw') {
           draw(state, side, e.n);
-          say(state, card.name + ' brings word — ' + p.name + ' draws ' + e.n + '.');
+          say(state, card.name + ' brings word — ' + e.n + ' drawn.');
         }
       });
       return OK;

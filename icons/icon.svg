@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Crest Cards' own mark. Drawn for this repo, so nothing here needs
+       attributing: a heater shield parted per pale in the same two tinctures
+       the in-game crests use, over the app's paper ground. -->
+  <rect width="512" height="512" rx="112" fill="#f6f4f0"/>
+  <g transform="translate(256 262) scale(3.05) translate(-50 -60)">
+    <defs>
+      <clipPath id="s">
+        <path d="M4 4 H96 V62 C96 92 74 110 50 116 C26 110 4 92 4 62 Z"/>
+      </clipPath>
+    </defs>
+    <g clip-path="url(#s)">
+      <path d="M4 4 H96 V62 C96 92 74 110 50 116 C26 110 4 92 4 62 Z" fill="#b9c4b0"/>
+      <rect x="50" y="0" width="50" height="120" fill="#9fae96"/>
+      <!-- A chief, to break the halves and give the mark a horizon -->
+      <rect x="0" y="0" width="100" height="26" fill="#4d7a91"/>
+    </g>
+    <path d="M4 4 H96 V62 C96 92 74 110 50 116 C26 110 4 92 4 62 Z"
+          fill="none" stroke="#3a6377" stroke-width="6" stroke-linejoin="round"/>
+    <!-- A plain blade down the parting line: the one charge, kept simple so it
+         survives being 24 pixels wide in a browser tab. -->
+    <path d="M50 34 L57 44 V78 L50 88 L43 78 V44 Z" fill="#f6f4f0" stroke="#3a6377"
+          stroke-width="3.4" stroke-linejoin="round"/>
+  </g>
+</svg>
