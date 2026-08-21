@@ -1,0 +1,463 @@
+/* ============================================================
+   Grown-up controls — shared across Letter Sounds, Tidy Up and
+   Behaviour Garden. This file is byte-identical in all three
+   apps; edit it in one and copy it to the others.
+
+   Two rules keep it safe to drop into an app that already has
+   its own stylesheet:
+
+   1. Everything is scoped under `.grownup`, so a `.btn` on a
+      child screen is never touched. The extra class also wins
+      on specificity, so this file can be loaded last and the
+      app's own rules stop fighting it.
+   2. Every token is `--gu-` prefixed. All three apps already
+      define `--ink`, `--line`, `--paper` and friends with
+      different values, and stomping those would repaint the
+      child screens too.
+
+   The palette is Letter Sounds'. The controls are Tidy Up's.
+   ============================================================ */
+
+:root {
+  --gu-paper:    #f7f4ee;
+  --gu-surface:  #ffffff;
+  --gu-raise:    #fffdf9;
+  --gu-sunk:     #faf8f2;
+  --gu-ink:      #2f2a25;
+  --gu-ink-2:    #5d554c;
+  --gu-muted:    #8a8178;
+  --gu-line:     #e4ddd2;
+  --gu-line-2:   #c9bfae;
+  --gu-soft:     #efe9df;
+  --gu-accent:   #3f7d6a;
+  --gu-accent-d: #2f6153;
+  --gu-accent-bg:#eaf2ee;
+  --gu-warm:     #d98a4a;
+  --gu-amber:    #8a6a2f;
+  --gu-amber-bg: #fbf2e3;
+  --gu-amber-line:#f0e0c2;
+  --gu-rose:     #a8564a;
+  --gu-rose-bg:  #fbeeeb;
+  --gu-rose-line:#f0d6d0;
+
+  /* Adult prose reads better in the system face, and the change of voice
+     signals that a screen is for the grown-up rather than the child. */
+  --gu-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --gu-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --gu-r:    14px;  /* cards */
+  --gu-r-sm: 10px;  /* controls */
+  --gu-hold: 1600ms;
+}
+
+/* ---------- the surface ---------- */
+
+/* Whatever the app wraps its grown-up area in — a full screen in Letter
+   Sounds and Tidy Up, a sheet over the garden in Behaviour Garden — it
+   becomes the same scrolling sheet of paper once this class is on it.
+
+   .gu-sheet and .gu-head carry a prefix where the rest of the kit does not,
+   because Behaviour Garden already calls its own overlays .sheet and finds
+   the one to close with closest('.sheet'). */
+.grownup {
+  font-family: var(--gu-font);
+  color: var(--gu-ink);
+  background: var(--gu-paper);
+  text-align: left;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Grown-ups copy sync codes out of here. */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.grownup .gu-sheet {
+  width: min(100%, 680px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 0 clamp(14px, 3vw, 22px) calc(3rem + env(safe-area-inset-bottom));
+}
+
+/* Stays put so "Done" is always one tap away, however far down they are, and
+   it is what clears the notch — the surface itself does not pad, so a panel
+   that opens as a sheet rather than a full screen is not left with a gap. */
+.grownup .gu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 calc(clamp(14px, 3vw, 22px) * -1);
+  padding: calc(0.7rem + env(safe-area-inset-top)) clamp(14px, 3vw, 22px) 0.7rem;
+  background: var(--gu-paper);
+  border-bottom: 1px solid transparent;
+}
+
+.grownup .gu-head h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- cards ---------- */
+
+.grownup .block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 1.15rem;
+  background: var(--gu-surface);
+  border: 1px solid var(--gu-line);
+  border-radius: var(--gu-r);
+}
+
+.grownup .block[hidden] { display: none; }
+
+.grownup .block h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- prose ---------- */
+
+.grownup .hint {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--gu-ink-2);
+  max-width: 62ch;
+}
+
+.grownup .stat { margin: 0; font-size: 0.95rem; }
+.grownup .muted { color: var(--gu-muted); }
+.grownup .credits { font-size: 0.8rem; line-height: 1.6; color: var(--gu-muted); }
+.grownup .credits a { color: var(--gu-accent); }
+
+.grownup .ok  { color: var(--gu-accent-d); font-weight: 700; }
+.grownup .bad { color: var(--gu-rose); font-weight: 700; }
+
+/* Something the grown-up should act on, rather than just read. */
+.grownup .nudge {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--gu-r-sm);
+  background: var(--gu-amber-bg);
+  border: 1px solid var(--gu-amber-line);
+  color: var(--gu-amber);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.grownup .nudge[hidden] { display: none; }
+
+/* Something that has arrived and is waiting on a decision. */
+.grownup .banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.85rem 0.9rem;
+  border-radius: var(--gu-r-sm);
+  background: var(--gu-accent-bg);
+  border: 1px solid #cfe0d7;
+}
+
+.grownup .banner[hidden] { display: none; }
+.grownup .banner p { margin: 0; font-size: 0.88rem; line-height: 1.5; }
+
+/* ---------- buttons ---------- */
+
+.grownup .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  padding: 0 0.9rem;
+  border-radius: var(--gu-r-sm);
+  border: 1px solid var(--gu-line);
+  background: var(--gu-surface);
+  color: var(--gu-ink);
+  font-family: var(--gu-font);
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.grownup .btn:active   { background: var(--gu-soft); }
+.grownup .btn:disabled { opacity: 0.35; cursor: default; }
+
+.grownup .btn--go {
+  background: var(--gu-accent);
+  border-color: var(--gu-accent);
+  color: #fff;
+  font-weight: 600;
+}
+.grownup .btn--go:active { background: var(--gu-accent-d); border-color: var(--gu-accent-d); }
+
+.grownup .btn--quiet {
+  min-height: 36px;
+  font-size: 0.85rem;
+  background: var(--gu-sunk);
+}
+
+/* For "Done" and other exits: a word, not an object. */
+.grownup .btn--plain {
+  border-color: transparent;
+  background: transparent;
+  font-weight: 600;
+  color: var(--gu-accent-d);
+}
+.grownup .btn--plain:active { background: var(--gu-soft); }
+
+.grownup .btn--danger {
+  color: var(--gu-rose);
+  border-color: var(--gu-rose-line);
+  background: var(--gu-rose-bg);
+}
+.grownup .btn--danger:active { background: #f6ddd7; }
+
+/* A card is a flex column, so a button dropped straight into one would
+   stretch to its full width by accident. Full width is a decision, not a
+   side effect: ask for it. */
+.grownup .block > .btn { align-self: flex-start; }
+.grownup .btn--wide { width: 100%; align-self: stretch; }
+
+/* A toggle that is currently the chosen one. */
+.grownup .btn--on {
+  background: var(--gu-accent-bg);
+  border-color: var(--gu-accent);
+  color: var(--gu-accent-d);
+  font-weight: 600;
+}
+
+.grownup .btn-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* display:flex beats the hidden attribute's default display:none, and
+   these rows are toggled with `hidden` all over the sync panels, so it
+   has to be said again for every flex container that gets hidden. */
+.grownup .btn-row[hidden] { display: none; }
+
+/* ---------- fields ---------- */
+
+.grownup .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.grownup .field--row { flex-direction: row; align-items: center; gap: 0.6rem; }
+
+/* Without min-width:0 the range keeps its intrinsic width, the row
+   overflows, and the readout beside it slides off the edge. */
+.grownup .field--row input[type="range"] { flex: 1; min-width: 0; }
+.grownup .field input[type="range"] { accent-color: var(--gu-accent); height: 34px; }
+.grownup .field input[type="checkbox"],
+.grownup .check input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gu-accent); flex: none; }
+
+.grownup .input,
+.grownup .select {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.7rem;
+  border-radius: var(--gu-r-sm);
+  border: 1px solid var(--gu-line);
+  background: var(--gu-surface);
+  color: var(--gu-ink);
+  font-family: var(--gu-font);
+  font-size: 0.95rem;
+}
+
+.grownup .select { padding: 0.5rem 0.7rem; }
+.grownup .input:focus,
+.grownup .select:focus { outline: 2px solid var(--gu-accent); outline-offset: -1px; }
+.grownup .input--code { text-transform: uppercase; }
+
+/* A tick-box and its sentence, as one tap target. */
+.grownup .check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+/* ---------- a set of choices ---------- */
+
+/* Radio-in-all-but-name: each option carries its own explanation, which
+   is the whole point — the grown-up is picking between descriptions. */
+.grownup .level {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--gu-line);
+  background: var(--gu-sunk);
+  color: var(--gu-ink);
+  font-family: var(--gu-font);
+  text-align: left;
+  cursor: pointer;
+}
+
+.grownup .level.is-current { border-color: var(--gu-accent); background: var(--gu-accent-bg); }
+.grownup .level-title { font-size: 0.92rem; font-weight: 600; }
+.grownup .level-body  { font-size: 0.82rem; line-height: 1.45; color: var(--gu-ink-2); }
+
+/* ---------- a log of what happened ---------- */
+
+.grownup .history { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.grownup .history-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--gu-soft);
+  font-size: 0.85rem;
+}
+
+.grownup .history-line:last-child { border-bottom: none; }
+
+/* ---------- sharing between devices ---------- */
+
+.grownup .sync-code {
+  align-self: center;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: var(--gu-soft);
+  color: var(--gu-ink);
+  font-family: var(--gu-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+.grownup .qr-holder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  background: var(--gu-surface);
+  border: 1px solid var(--gu-line);
+  border-radius: 12px;
+}
+
+.grownup .qr-holder[hidden] { display: none; }
+.grownup .qr-holder svg { width: min(100%, 260px); height: auto; image-rendering: pixelated; }
+.grownup .qr-holder .hint { text-align: center; }
+
+/* ============================================================
+   The way in
+
+   A real, visible button, because a faint dot was not findable.
+   A plain tap does nothing — the hold is what keeps a five-year-old
+   out — and the ring fills so the grown-up can see it working.
+   ============================================================ */
+
+.gu-corner {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  right: 10px;
+  z-index: 40;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 1px solid var(--gu-line);
+  background: var(--gu-surface);
+  color: var(--gu-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.07);
+  -webkit-touch-callout: none;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.gu-corner[hidden] { display: none; }
+
+/* Behaviour Garden already has a top bar of its own, so there the button
+   sits in the flow of it rather than floating over the garden, and comes
+   down to the size of the chips beside it. */
+.gu-corner--inline { position: relative; inset: auto; flex: none; width: 44px; height: 44px; }
+.gu-corner--inline .gu-glyph { width: 21px; height: 21px; }
+
+.gu-glyph { width: 25px; height: 25px; display: block; }
+
+.gu-ring {
+  position: absolute;
+  inset: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  transform: rotate(-90deg);
+  pointer-events: none;
+  overflow: visible;
+}
+
+.gu-ring circle {
+  fill: none;
+  stroke: var(--gu-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  /* 2 * pi * r, for the r=22 circle in the 48-unit viewBox below. */
+  stroke-dasharray: 138.2;
+  stroke-dashoffset: 138.2;
+  transition: stroke-dashoffset 200ms ease;
+}
+
+/* Releasing early snaps the ring back quickly; holding sweeps it round
+   over exactly as long as the hold takes. */
+.gu-corner.is-holding { color: var(--gu-ink); border-color: transparent; }
+.gu-corner.is-holding .gu-ring circle {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset var(--gu-hold) linear;
+}
+
+/* Shown when a tap arrives where a hold was needed. */
+.gu-corner.nudge-hold { animation: gu-nudge 0.32s ease; }
+@keyframes gu-nudge {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-3px); }
+  75%      { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grownup *, .gu-corner, .gu-corner * {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+  /* Except the ring, whose whole job is to take the length of the hold. */
+  .gu-corner.is-holding .gu-ring circle { transition-duration: var(--gu-hold) !important; }
+}
+
+/* Grown-up sheets scale in width but their type is set small on purpose.
+   On a tablet or a monitor that reads cramped, so lift the whole thing
+   rather than tuning a dozen leaf rules. */
+@media (min-width: 700px) and (min-height: 700px) {
+  .grownup { font-size: 17px; }
+  .grownup .gu-head h1 { font-size: 1.4rem; }
+  .grownup .block h2 { font-size: 1.08rem; }
+  .grownup .hint { font-size: 0.92rem; }
+  .grownup .btn { font-size: 0.95rem; min-height: 44px; }
+  .grownup .btn--quiet { font-size: 0.9rem; min-height: 40px; }
+}

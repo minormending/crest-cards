@@ -1,0 +1,170 @@
+/* ============================================================
+   The front door — shared across Letter Sounds, Tidy Up and
+   Behaviour Garden. This file is byte-identical in all three
+   apps; edit it in one and copy it to the others.
+
+   Every game opens on the same object: its name, one line meant
+   for the grown-up, and one big round button to press. Only the
+   paint changes — warm paper in two of them, the garden's own sky
+   in the third — so the three read as one suite without the
+   garden being flattened into a form.
+
+   The button is round and wordless on purpose. A child who cannot
+   read still knows what a play triangle means, and it is the same
+   shape they will press again on the next screen. The caption
+   underneath is for whoever is holding the tablet, and it is also
+   where "Getting ready…" and any failure gets said.
+
+   Only the skeleton is here. This file paints nothing it does not
+   have to: every colour is var(--ld-x, fallback) so the app can set
+   the token and get its own, or set nothing and get warm paper. The
+   fallback lives at the point of use rather than in a :root block
+   here, because this file is loaded last and a :root block would
+   quietly beat the app's own :root on source order. The typeface is
+   whatever the app has already given the child.
+   ============================================================ */
+
+:root {
+  /* One number drives the whole door, the way --stage drives the garden
+     next door. Width-bound on a phone, height-bound on a short landscape
+     screen, and capped so it stops growing on a monitor. Everything below
+     is a fraction of it, so the door fills a tablet instead of sitting
+     phone-sized in the middle of one, and so nothing needs a second set
+     of sizes for landscape.
+
+     Internal to this file: apps set the colours, not the size.
+
+     The vh version is the fallback. Left on its own, a browser without
+     dvh would throw out the whole declaration, leave --ld-stage unset,
+     and every calc() below with it -- which is a button with no size
+     rather than a slightly wrong one. */
+  --ld-stage: min(92vw, 62vh, 560px);
+  --ld-tap: calc(var(--ld-stage) * 0.38);
+}
+
+@supports (height: 1dvh) {
+  /* dvh, so the browser chrome sliding away on a phone does not resize
+     the door underneath the child's finger. */
+  :root { --ld-stage: min(92vw, 62dvh, 560px); }
+}
+
+.landing {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--ld-stage) * 0.036);
+  padding: 5vh 5vw;
+  text-align: center;
+}
+
+.landing-name {
+  margin: 0;
+  font-size: max(1.6rem, calc(var(--ld-stage) * 0.105));
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ld-ink, #2f2a25);
+  text-shadow: var(--ld-shadow, none);
+}
+
+/* One line, and it is addressed to the grown-up: the child is not
+   reading it, and a second line is one the grown-up will not read
+   either. */
+.landing-lede {
+  margin: 0;
+  max-width: 26ch;
+  font-size: max(0.95rem, calc(var(--ld-stage) * 0.047));
+  line-height: 1.4;
+  color: var(--ld-lede, #8a8178);
+  text-shadow: var(--ld-shadow, none);
+}
+
+.landing-go {
+  width: var(--ld-tap);
+  height: var(--ld-tap);
+  margin-top: calc(var(--ld-stage) * 0.03);
+  flex: none;
+  border: none;
+  border-radius: 50%;
+  padding: 0;
+  background: var(--ld-go-bg, #3f7d6a);
+  color: var(--ld-go-ink, #fff);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  /* The same solid drop the other big buttons in the suite have, so
+     it reads as pressable rather than printed. */
+  box-shadow: 0 6px 0 var(--ld-go-deep, #2f6153);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, opacity 0.2s ease;
+}
+
+.landing-go:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 var(--ld-go-deep, #2f6153);
+}
+
+/* While the sounds load. Still visible, so the screen does not look
+   broken, but plainly not ready. */
+.landing-go:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: 0 6px 0 var(--ld-go-deep, #2f6153);
+}
+
+/* Sized from the number that sizes the button, not as a percentage of
+   it. A percentage width on an <svg> inside a grid container resolves
+   against the item's own height rather than the grid area, so the
+   triangle came out at 42% of 42% -- under half the size it should be,
+   and the button read as small however big the circle got. The height
+   was right, so it was drawn small and centred in a tall box. calc()
+   off --ld-tap cannot get that wrong, in grid or anywhere else. */
+.landing-go-glyph {
+  width: calc(var(--ld-tap) * 0.42);
+  height: calc(var(--ld-tap) * 0.42);
+  display: block;
+  /* An equilateral triangle sits visually left of centre in its own
+     box; nudge it back or the circle looks lopsided. */
+  margin-left: calc(var(--ld-tap) * 0.025);
+  fill: currentColor;
+}
+
+.landing-cap {
+  margin: 0;
+  min-height: 1.5em;
+  font-size: max(0.9rem, calc(var(--ld-stage) * 0.042));
+  color: var(--ld-cap, #8a8178);
+  text-shadow: var(--ld-shadow, none);
+}
+
+.landing-err {
+  margin: 0;
+  max-width: 30ch;
+  min-height: 1.4em;
+  font-size: max(0.85rem, calc(var(--ld-stage) * 0.037));
+  line-height: 1.4;
+  color: var(--ld-err, #b4503c);
+  text-shadow: var(--ld-shadow, none);
+}
+
+.landing-err:empty { min-height: 0; }
+
+/* Leaving. The column fades and the app is underneath it already,
+   which is what makes the garden feel like it was always there. */
+.landing.is-going {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.26s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing, .landing-go { transition-duration: 1ms !important; }
+}
+
+/* No landscape rules. --ld-stage is bound by height as well as width, so
+   a phone on its side shrinks the whole door together rather than needing
+   its own set of sizes that then have to be kept in step with these. The
+   max() floors are what stop the small text following it down. */
