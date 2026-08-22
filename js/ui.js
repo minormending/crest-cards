@@ -30,6 +30,14 @@ window.UI = (function () {
   /* Masked, not <img>: an SVG loaded through <img> is its own document and
      cannot inherit colour, and these need to take the team tint and the muted
      grey from CSS. */
+  /* A unit's portrait: one frame of the sprite strip, chosen by index. Weapons
+     and items keep their vector icons on purpose — there are no sprites for a
+     whetstone, and a masked glyph tints with the team where a sprite cannot. */
+  function portrait(card, cls) {
+    return '<span class="' + (cls || '') + ' portrait" style="--pi:' + card.sprite +
+           '" aria-hidden="true"></span>';
+  }
+
   function ic(name, cls) {
     var url = 'art/icons/' + name + '.svg';
     return '<i class="ic' + (cls ? ' ' + cls : '') + '" style="' +
@@ -109,7 +117,8 @@ window.UI = (function () {
       '<span class="card-body">' +
         '<span class="card-cost">' + card.cost + '</span>' +
         '<span class="card-kind">' + kindIcon(card) + '</span>' +
-        '<span class="card-art">' + ic(card.art) + '</span>' +
+        (card.kind === 'unit' ? portrait(card, 'card-art')
+                              : '<span class="card-art">' + ic(card.art) + '</span>') +
         '<span class="card-name">' + esc(card.name) + '</span>' +
         '<span class="card-note">' + esc(shortNote(card)) + '</span>' +
       '</span></button>';
@@ -148,7 +157,7 @@ window.UI = (function () {
       (u.sovereign ? '<span class="slot-crown">' + ic('crown') + '</span>' : '') +
       (slot.w ? '<span class="slot-wpn">' + ic(C.get(slot.w).art) + '</span>' : '') +
       '<span class="slot-body">' +
-        '<span class="slot-art">' + ic(u.art) + '</span>' +
+        portrait(u, 'slot-art') +
         '<span class="slot-name">' + esc(u.name.split(' ')[0]) + '</span>' +
         '<span class="' + hpCls + '"><i style="width:' +
             Math.max(0, Math.min(100, frac * 100)) + '%"></i></span>' +
@@ -273,7 +282,8 @@ window.UI = (function () {
 
   function cardSheet(ref, liveUnit) {
     var card = C.get(ref);
-    var out = '<h2>' + esc(card.name) + '</h2>';
+    var out = (card.kind === 'unit' ? portrait(card, 'sheet-portrait') : '') +
+              '<h2>' + esc(card.name) + '</h2>';
 
     var sub = card.kind === 'unit'
       ? esc(card.cls) + ' · ' + C.TYPE_LABEL[card.at]
@@ -321,7 +331,7 @@ window.UI = (function () {
 
   return {
     esc: esc, ic: ic, fxText: fxText, shortNote: shortNote,
-    cardFace: cardFace, slotFace: slotFace, STAT_ICON: STAT_ICON,
+    cardFace: cardFace, slotFace: slotFace, portrait: portrait, STAT_ICON: STAT_ICON,
     paintArmies: paintArmies, paintRibbon: paintRibbon,
     paintHand: paintHand, paintLog: paintLog,
     whoHtml: whoHtml, pips: pips, cardSheet: cardSheet,

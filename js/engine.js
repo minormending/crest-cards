@@ -50,7 +50,7 @@ window.Engine = (function () {
   function instantiate(ref) {
     var c = C.get(ref);
     return {
-      ref: ref, name: c.name, cls: c.cls, at: c.at, art: c.art,
+      ref: ref, name: c.name, cls: c.cls, at: c.at, art: c.art, sprite: c.sprite,
       st: { hp: c.st.hp, str: c.st.str, mag: c.st.mag, def: c.st.def, res: c.st.res, spd: c.st.spd },
       hp: c.st.hp, maxHp: c.st.hp,
       tags: c.tags.slice(), fx: clone(c.fx),

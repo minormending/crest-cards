@@ -5,7 +5,8 @@
  * the same list land on the same board. These checks exist to catch the day
  * that stops being true. */
 
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // The game ships as classic scripts against `window`; give them one.
 const win = {};
@@ -445,6 +446,68 @@ function clearField(st, side) {
   const after = { ...A.st, moves: {}, _epoch: 1 };
   ok('a rematch can empty a log a merge could not',
      dense(after).length === 0 && before > 0, `${before} moves before`);
+}
+
+// ── 14. Unit portraits ───────────────────────────────────────────────────
+//
+// The frame index has to survive instantiate(), which builds the DEPLOYED unit
+// as a fresh object rather than keeping the card. It did not, at first: cards in
+// hand had portraits and everything on the board rendered --pi:undefined.
+{
+  const idx = Cards.UNITS.map(u => u.sprite);
+  ok('every unit has a frame index', idx.every(n => Number.isInteger(n) && n >= 0),
+     JSON.stringify(Cards.UNITS.filter(u => !Number.isInteger(u.sprite)).map(u => u.id)));
+  ok('frame indices are distinct', new Set(idx).size === idx.length);
+  ok('frame indices are contiguous from 0',
+     Math.min(...idx) === 0 && Math.max(...idx) === idx.length - 1);
+
+  // The strip must actually contain that many frames, or the last portraits
+  // would show empty space.
+  const png = readFileSync('art/sprites/units.png');
+  const w = png.readUInt32BE(16), h = png.readUInt32BE(20);
+  ok('the strip holds one 32px frame per unit',
+     w === Cards.UNITS.length * 32 && h === 32, `${w}x${h}`);
+
+  // And it has to reach the board, not just the hand.
+  const st = Engine.start(Engine.makeSetup({
+    seed: 1, decks: ['ashfell', 'ivory'], names: ['A', 'B'],
+  }));
+  ok('a deployed unit keeps its frame index',
+     Number.isInteger(st.players[0].field[1][1].u.sprite));
+
+  const rendered = Cards.UNITS.map((u) => {
+    const slot = { u: { ...u, ref: 'u:' + u.id, hp: u.st.hp, maxHp: u.st.hp }, w: null, acted: false };
+    return UI.slotFace(slot, { r: 0, c: 0, side: 0, mine: true });
+  });
+  ok('no board portrait renders an undefined frame',
+     rendered.every(h => /--pi:\d+"/.test(h)));
+
+  // The CSS steps by 100%/(frames-1) because a percentage background-position
+  // resolves against (element - image). If the frame count ever changes, that
+  // divisor and the background-size have to change with it.
+  const css = readFileSync('css/app.css', 'utf8');
+  const n = Cards.UNITS.length;
+  ok('the sprite CSS matches the frame count',
+     css.includes(`${n * 100}% 100%`) && css.includes(`100% / ${n - 1}`),
+     `expected background-size ${n * 100}% and a /${n - 1} step`);
+}
+
+// ── 15. url() in the stylesheet resolves to a real file ──────────────────
+//
+// url() in CSS is relative to the STYLESHEET, not the document. css/app.css
+// sits one level down, so url(art/sprites/units.png) quietly resolved to
+// css/art/sprites/units.png and 404'd — and a missing background image draws
+// nothing at all, with no console error and no broken-image glyph. The
+// portraits were simply invisible while every computed style read as correct.
+{
+  const css = readFileSync('css/app.css', 'utf8');
+  const refs = [...css.matchAll(/url\(\s*['"]?([^'")]+?)['"]?\s*\)/g)]
+    .map(m => m[1])
+    .filter(u => !/^(data:|https?:|#)/.test(u));
+  const bad = refs.filter(u => !existsSync(resolve('css', u)));
+  ok('every url() in the stylesheet resolves', bad.length === 0,
+     bad.map(u => `${u} -> ${resolve('css', u)}`).join(', '));
+  ok('the stylesheet references at least one asset', refs.length > 0);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

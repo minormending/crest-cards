@@ -172,6 +172,35 @@ button { font: inherit; color: inherit; }
   flex: none;
 }
 
+/* Unit portraits, as one horizontal strip of 19 pixel-art frames.
+ *
+ * A strip plus background-position rather than 19 files: one request, and the
+ * frame is chosen with a custom property instead of a URL.
+ *
+ * The arithmetic is the one non-obvious part. A percentage background-position
+ * resolves against (element width - image width), and with background-size at
+ * 1900% the image is 19 element-widths, so that difference is -18 elements.
+ * Stepping one frame is therefore 100%/18, not 100%.
+ *
+ * `pixelated` matters: these are 32px sprites shown at 40-70px, and the browser
+ * default would smooth them into mush. The size is deliberately not forced to a
+ * whole multiple — pixel art upscaled by 1.4 with nearest-neighbour still reads
+ * as pixel art, and pinning the board to integer multiples of 32 would fight
+ * the one number the layout is driven by. */
+.portrait {
+  /* Relative to THIS STYLESHEET, not to the document — css/app.css sits one
+     level down, so the bare path resolved to css/art/... and silently 404'd.
+     The inline masks in js/ui.js are document-relative and correct as written;
+     only url() in CSS has this rule. */
+  background-image: url(../art/sprites/units.png);
+  background-repeat: no-repeat;
+  background-size: 1900% 100%;
+  background-position: calc(var(--pi) * 100% / 18) 0;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  flex: none;
+}
+
 /* ── Screens ──────────────────────────────────────────────────────────── */
 
 .screen { display: none; }
@@ -415,6 +444,12 @@ button { font: inherit; color: inherit; }
   margin-top: calc(var(--slot) * .06);
   opacity: .88;
 }
+.slot-art.portrait {
+  width: calc(var(--slot) * .62);
+  height: calc(var(--slot) * .62);
+  margin-top: calc(var(--slot) * .04);
+  opacity: 1;
+}
 .slot--theirs .slot-art { color: #6f4f45; }
 .slot--mine   .slot-art { color: #33606d; }
 
@@ -522,6 +557,12 @@ button { font: inherit; color: inherit; }
 }
 .card-art { font-size: calc(var(--slot) * .42); color: var(--ink-2);
             margin-top: calc(var(--slot) * .2); opacity: .9; }
+.card-art.portrait {
+  width: calc(var(--slot) * .58);
+  height: calc(var(--slot) * .58);
+  margin-top: calc(var(--slot) * .16);
+  opacity: 1;
+}
 .card-name {
   font-family: var(--serif);
   font-size: calc(var(--slot) * .125);
@@ -617,6 +658,14 @@ button { font: inherit; color: inherit; }
   padding: clamp(1rem, 4vw, 1.5rem);
 }
 .sheet-card h2 { font-size: 1.3rem; margin-bottom: .3rem; }
+.sheet-portrait {
+  width: 96px; height: 96px;
+  float: right;
+  margin: 0 0 .4rem .8rem;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+}
 .sheet-card .lede { color: var(--muted); font-size: .9rem; margin: 0 0 1rem; }
 
 .stat-grid {

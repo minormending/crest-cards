@@ -225,9 +225,10 @@ js/archive.js           finished matches, on this device
 js/sync-host.js         the kidsync contract and this game's merge rules
 js/app.js               screens, input, and the glue
 art/icons/              42 icons from game-icons.net, CC BY 3.0
+art/sprites/units.png   19 unit portraits, CC0, one 32px frame per unit
 sync/                   vendored kidsync
 suite/                  vendored kidsuite
-tools/                  tests, the AI bench, and the icon fetcher
+tools/                  tests, the AI bench, and the art builders
 ```
 
 Everything is a classic script against `window`, which is the convention both
@@ -266,9 +267,10 @@ from here: it would change four other apps' panels.
 ## Tools
 
 ```sh
-node tools/selftest.mjs      # 53 checks: rules, determinism, merge, icons
-node tools/ai-bench.mjs      # opponent strength, mirror-matched
-node tools/fetch-icons.mjs   # re-download and de-invert the icon set
+node tools/selftest.mjs        # 62 checks: rules, determinism, merge, art
+node tools/ai-bench.mjs        # opponent strength, mirror-matched
+node tools/fetch-icons.mjs     # re-download and de-invert the icon set
+node tools/build-sprites.mjs   # rebuild the portrait strip from the CC0 sheet
 node tools/gen-attribution.mjs
 ```
 
@@ -283,8 +285,14 @@ covers the things this design leans on and would fail silently without:
   and the finished room fits kidsync's 32KB. This is the closest thing to a
   live-room test that runs with no network — and a desync would otherwise show
   up not as an error but as two players quietly looking at different boards.
-- Every icon reference resolves to a file, in both directions. A CSS mask
-  pointing at a 404 fails completely silently.
+- Every icon reference resolves to a file, in both directions, and every
+  `url()` in the stylesheet resolves too. Both of these fail **completely
+  silently** — a CSS mask or background pointing at a 404 draws nothing, with
+  no console error and no broken-image glyph, while every computed style still
+  reads as correct.
+- Unit portraits survive `instantiate()`, which rebuilds a deployed unit as a
+  fresh object rather than keeping the card — so cards in hand had faces and
+  the whole board rendered `--pi:undefined`.
 - Tactics a person would notice: takes a lethal blow, refuses to trade a unit
   for 1 damage, prefers a kill to a chip, keeps archers behind the front rank.
 
@@ -321,6 +329,26 @@ was invisible to the win rate.
   duration would need per-unit expiry tracked through every replay, and a number
   printed on a card that the engine does not enforce is worse than a simpler
   card that means what it says.
+
+## Art
+
+Unit portraits are pixel sprites from Eldiran's
+[32x32 RPG Character Sprites](https://opengameart.org/content/32x32-rpg-character-sprites),
+**CC0** — public domain, no attribution required and no share-alike, credited
+anyway. `tools/build-sprites.mjs` takes the standing frame of nineteen rows, one
+per unit, and composites them into a single strip; it also keys out the upstream
+sheet's opaque magenta background, which would otherwise put a block behind
+every card. Which row became which unit, and why, is in `PICKS` in that script.
+
+The interface icons are [game-icons.net](https://game-icons.net) under CC BY 3.0.
+The crest behind every portrait is generated in the browser from a hash of the
+card's id — no files, nothing to attribute.
+
+**Sprites ripped from commercial games are not usable here**, whatever
+attribution is offered with them: those assets belong to their publishers, an
+archive that hosts them has no licence to pass on, and crediting a rights holder
+is not permission from one. The roster was written so none of it is needed. See
+[ATTRIBUTION.md](ATTRIBUTION.md).
 
 ## Licence
 
