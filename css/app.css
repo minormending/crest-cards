@@ -20,7 +20,11 @@
   --sunk:       #efece5;
   --ink:        #2f3538;
   --ink-2:      #4a5257;
-  --muted:      #737b80;
+  /* 4.79:1 on the page ground and 4.77 on a card, measured. It was
+     #737b80 — 3.92 and 4.27, under the 4.5 that AA asks for body text,
+     which is the kind of grey that looks fine to the person who picked
+     it and is hard work for everyone else. */
+  --muted:      #666d71;
   --faint:      #9aa1a5;
   --line:       #e2dcd2;
   --line-2:     #cfc7ba;
