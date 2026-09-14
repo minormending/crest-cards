@@ -265,7 +265,9 @@
 .grownup .field--row input[type="range"] { flex: 1; min-width: 0; }
 .grownup .field input[type="range"] { accent-color: var(--gu-accent); height: 34px; }
 .grownup .field input[type="checkbox"],
-.grownup .check input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gu-accent); flex: none; }
+/* 24px, not 22: that is the floor a pointer needs (WCAG 2.5.8), and these are
+   the settings a parent taps on a phone. */
+.grownup .check input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--gu-accent); flex: none; }
 
 .grownup .input,
 .grownup .select {
